@@ -5,16 +5,16 @@ on:
   push:
     branches: [ main ]
     paths-ignore: # 忽略README等文件变更触发
-      - ‘**/*.md’
-      - ‘.gitignore’
+      - '**/*.md'
+      - '.gitignore'
   schedule:
     # 每周日UTC时间0点自动运行一次（可选）
-    - cron: ‘0 0 * * 0’
+    - cron: '0 0 * * 0'
 
 # 设置环境变量，方便管理
 env:
-  KERNEL_REPO: “https://github.com/microsoft/WSL2-Linux-Kernel.git”
-  KERNEL_BRANCH: “linux-msft-wsl-6.1.y”
+  KERNEL_REPO: "https://github.com/microsoft/WSL2-Linux-Kernel.git"
+  KERNEL_BRANCH: "linux-msft-wsl-6.1.y"
 
 jobs:
   build:
@@ -22,79 +22,79 @@ jobs:
     timeout-minutes: 180 # 编译可能很慢，设置3小时超时
 
     steps:
-    # 1. 检出本仓库代码（含脚本）
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      # 1. 检出本仓库代码（含脚本）
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # 2. 配置Git（用于克隆内核仓库）
-    - name: Configure Git
-      run: |
-        git config --global user.email “actions@github.com”
-        git config --global user.name “GitHub Actions”
+      # 2. 配置Git（用于克隆内核仓库）
+      - name: Configure Git
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
 
-    # 3. 设置缓存，加速后续编译
-    - name: Cache kernel source
-      uses: actions/cache@v4
-      id: cache-kernel
-      with:
-        path: WSL2-Linux-Kernel
-        key: kernel-${{ env.KERNEL_BRANCH }}-${{ hashFiles(‘scripts/setup_config.sh’) }}
-        restore-keys: |
-          kernel-${{ env.KERNEL_BRANCH }}-
+      # 3. 设置缓存，加速后续编译
+      - name: Cache kernel source
+        uses: actions/cache@v4
+        id: cache-kernel
+        with:
+          path: WSL2-Linux-Kernel
+          key: kernel-${{ env.KERNEL_BRANCH }}-${{ hashFiles('scripts/setup_config.sh') }}
+          restore-keys: |
+            kernel-${{ env.KERNEL_BRANCH }}-
 
-    # 4. 获取内核源码（缓存未命中时）
-    - name: Fetch kernel source
-      if: steps.cache-kernel.outputs.cache-hit != ‘true’
-      run: |
-        echo “正在克隆内核源码（分支: ${{ env.KERNEL_BRANCH }}）...”
-        git clone --depth 1 \
-          --branch ${{ env.KERNEL_BRANCH }} \
-          ${{ env.KERNEL_REPO }} \
-          WSL2-Linux-Kernel
-        echo “源码克隆完成！”
+      # 4. 获取内核源码（缓存未命中时）
+      - name: Fetch kernel source
+        if: steps.cache-kernel.outputs.cache-hit != 'true'
+        run: |
+          echo "正在克隆内核源码（分支: ${{ env.KERNEL_BRANCH }}）..."
+          git clone --depth 1 \
+            --branch ${{ env.KERNEL_BRANCH }} \
+            ${{ env.KERNEL_REPO }} \
+            WSL2-Linux-Kernel
+          echo "源码克隆完成！"
 
-    # 5. 准备编译环境
-    - name: Setup build environment
-      run: |
-        echo “安装编译依赖...”
-        sudo apt-get update
-        sudo apt-get install -y \
-          build-essential \
-          flex \
-          bison \
-          libssl-dev \
-          libelf-dev \
-          bc \
-          kmod \
-          cpio \
-          libncurses-dev
+      # 5. 准备编译环境
+      - name: Setup build environment
+        run: |
+          echo "安装编译依赖..."
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            flex \
+            bison \
+            libssl-dev \
+            libelf-dev \
+            bc \
+            kmod \
+            cpio \
+            libncurses-dev
 
-    # 6. 配置内核（运行我们的脚本）
-    - name: Configure kernel
-      run: |
-        chmod +x scripts/setup_config.sh
-        ./scripts/setup_config.sh
-        echo “配置完成，确认关键选项:”
-        grep -E “ANDROID|ASHMEM” WSL2-Linux-Kernel/.config || true
+      # 6. 配置内核（运行我们的脚本）
+      - name: Configure kernel
+        run: |
+          chmod +x scripts/setup_config.sh
+          ./scripts/setup_config.sh
+          echo "配置完成，确认关键选项:"
+          grep -E "ANDROID|ASHMEM" WSL2-Linux-Kernel/.config || true
 
-    # 7. 编译内核（运行我们的脚本）
-    - name: Compile kernel
-      run: |
-        chmod +x scripts/build_kernel.sh
-        ./scripts/build_kernel.sh
+      # 7. 编译内核（运行我们的脚本）
+      - name: Compile kernel
+        run: |
+          chmod +x scripts/build_kernel.sh
+          ./scripts/build_kernel.sh
 
-    # 8. 上传产出物（便于下载）
-    - name: Upload kernel artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: wsl2-custom-kernel
-        path: kernel_output/
-        retention-days: 7
+      # 8. 上传产出物（便于下载）
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wsl2-custom-kernel
+          path: kernel_output/
+          retention-days: 7
 
-    # 9. （高级）创建GitHub Release（仅在打Tag时触发）
-    - name: Create Release
-      if: startsWith(github.ref, ‘refs/tags/v’)
-      uses: softprops/action-gh-release@v1
-      with:
-        files: kernel_output/*
-        generate_release_notes: true
+      # 9. （高级）创建GitHub Release（仅在打Tag时触发）
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: kernel_output/*
+          generate_release_notes: true
