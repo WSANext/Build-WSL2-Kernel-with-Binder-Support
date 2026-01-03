@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # scripts/build_kernel.sh - 编译内核并打包
 
 set -e

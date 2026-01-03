@@ -1,4 +1,4 @@
-﻿name: Build WSL2 Kernel with Binder
+name: Build WSL2 Kernel with Binder
 
 on:
   workflow_dispatch: # 手动触发按钮
