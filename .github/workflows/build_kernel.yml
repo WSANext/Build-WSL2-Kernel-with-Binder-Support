@@ -1,17 +1,17 @@
-name: Build WSL2 Kernel with Binder
+ï»¿name: Build WSL2 Kernel with Binder
 
 on:
-  workflow_dispatch: # ÊÖ¶¯´¥·¢°´Å¥
+  workflow_dispatch: # æ‰‹åŠ¨è§¦å‘æŒ‰é’®
   push:
     branches: [ main ]
-    paths-ignore: # ºöÂÔREADMEµÈÎÄ¼ş±ä¸ü´¥·¢
+    paths-ignore: # å¿½ç•¥READMEç­‰æ–‡ä»¶å˜æ›´è§¦å‘
       - '**/*.md'
       - '.gitignore'
   schedule:
-    # Ã¿ÖÜÈÕUTCÊ±¼ä0µã×Ô¶¯ÔËĞĞÒ»´Î£¨¿ÉÑ¡£©
+    # æ¯å‘¨æ—¥UTCæ—¶é—´0ç‚¹è‡ªåŠ¨è¿è¡Œä¸€æ¬¡ï¼ˆå¯é€‰ï¼‰
     - cron: '0 0 * * 0'
 
-# ÉèÖÃ»·¾³±äÁ¿£¬·½±ã¹ÜÀí
+# è®¾ç½®ç¯å¢ƒå˜é‡ï¼Œæ–¹ä¾¿ç®¡ç†
 env:
   KERNEL_REPO: "https://github.com/microsoft/WSL2-Linux-Kernel.git"
   KERNEL_BRANCH: "linux-msft-wsl-6.1.y"
@@ -19,20 +19,20 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 180 # ±àÒë¿ÉÄÜºÜÂı£¬ÉèÖÃ3Ğ¡Ê±³¬Ê±
+    timeout-minutes: 180 # ç¼–è¯‘å¯èƒ½å¾ˆæ…¢ï¼Œè®¾ç½®3å°æ—¶è¶…æ—¶
 
     steps:
-      # 1. ¼ì³ö±¾²Ö¿â´úÂë£¨º¬½Å±¾£©
+      # 1. æ£€å‡ºæœ¬ä»“åº“ä»£ç ï¼ˆå«è„šæœ¬ï¼‰
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. ÅäÖÃGit£¨ÓÃÓÚ¿ËÂ¡ÄÚºË²Ö¿â£©
+      # 2. é…ç½®Gitï¼ˆç”¨äºå…‹éš†å†…æ ¸ä»“åº“ï¼‰
       - name: Configure Git
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
 
-      # 3. ÉèÖÃ»º´æ£¬¼ÓËÙºóĞø±àÒë
+      # 3. è®¾ç½®ç¼“å­˜ï¼ŒåŠ é€Ÿåç»­ç¼–è¯‘
       - name: Cache kernel source
         uses: actions/cache@v4
         id: cache-kernel
@@ -42,21 +42,21 @@ jobs:
           restore-keys: |
             kernel-${{ env.KERNEL_BRANCH }}-
 
-      # 4. »ñÈ¡ÄÚºËÔ´Âë£¨»º´æÎ´ÃüÖĞÊ±£©
+      # 4. è·å–å†…æ ¸æºç ï¼ˆç¼“å­˜æœªå‘½ä¸­æ—¶ï¼‰
       - name: Fetch kernel source
         if: steps.cache-kernel.outputs.cache-hit != 'true'
         run: |
-          echo "ÕıÔÚ¿ËÂ¡ÄÚºËÔ´Âë£¨·ÖÖ§: ${{ env.KERNEL_BRANCH }}£©..."
+          echo "æ­£åœ¨å…‹éš†å†…æ ¸æºç ï¼ˆåˆ†æ”¯: ${{ env.KERNEL_BRANCH }}ï¼‰..."
           git clone --depth 1 \
             --branch ${{ env.KERNEL_BRANCH }} \
             ${{ env.KERNEL_REPO }} \
             WSL2-Linux-Kernel
-          echo "Ô´Âë¿ËÂ¡Íê³É£¡"
+          echo "æºç å…‹éš†å®Œæˆï¼"
 
-      # 5. ×¼±¸±àÒë»·¾³
+      # 5. å‡†å¤‡ç¼–è¯‘ç¯å¢ƒ
       - name: Setup build environment
         run: |
-          echo "°²×°±àÒëÒÀÀµ..."
+          echo "å®‰è£…ç¼–è¯‘ä¾èµ–..."
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
@@ -68,22 +68,34 @@ jobs:
             kmod \
             cpio \
             libncurses-dev
+      
+      # 6. æ£€æŸ¥ç›®å½•æ˜¯å¦æ­£å¸¸
+      - name: Debug Directory Structure
+        run: |
+          echo â€œå½“å‰å·¥ä½œç›®å½•:â€
+          pwd
+          echo â€œâ€
+          echo â€œåˆ—å‡ºæ‰€æœ‰æ–‡ä»¶å’Œç›®å½•:â€
+          ls -la
+          echo â€œâ€
+          echo â€œåˆ—å‡º scripts ç›®å½•å†…å®¹:â€
+          ls -la scripts/ 2>/dev/null || echo â€œscripts ç›®å½•ä¸å­˜åœ¨ï¼â€
 
-      # 6. ÅäÖÃÄÚºË£¨ÔËĞĞÎÒÃÇµÄ½Å±¾£©
+      # 7. é…ç½®å†…æ ¸ï¼ˆè¿è¡Œæˆ‘ä»¬çš„è„šæœ¬ï¼‰
       - name: Configure kernel
         run: |
           chmod +x scripts/setup_config.sh
           ./scripts/setup_config.sh
-          echo "ÅäÖÃÍê³É£¬È·ÈÏ¹Ø¼üÑ¡Ïî:"
+          echo "é…ç½®å®Œæˆï¼Œç¡®è®¤å…³é”®é€‰é¡¹:"
           grep -E "ANDROID|ASHMEM" WSL2-Linux-Kernel/.config || true
 
-      # 7. ±àÒëÄÚºË£¨ÔËĞĞÎÒÃÇµÄ½Å±¾£©
+      # 8. ç¼–è¯‘å†…æ ¸ï¼ˆè¿è¡Œæˆ‘ä»¬çš„è„šæœ¬ï¼‰
       - name: Compile kernel
         run: |
           chmod +x scripts/build_kernel.sh
           ./scripts/build_kernel.sh
 
-      # 8. ÉÏ´«²ú³öÎï£¨±ãÓÚÏÂÔØ£©
+      # 9. ä¸Šä¼ äº§å‡ºç‰©ï¼ˆä¾¿äºä¸‹è½½ï¼‰
       - name: Upload kernel artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -91,7 +103,7 @@ jobs:
           path: kernel_output/
           retention-days: 7
 
-      # 9. £¨¸ß¼¶£©´´½¨GitHub Release£¨½öÔÚ´òTagÊ±´¥·¢£©
+      # 10. åˆ›å»ºGitHub Releaseï¼ˆä»…åœ¨æ‰“Tagæ—¶è§¦å‘ï¼‰
       - name: Create Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v1
