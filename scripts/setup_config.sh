@@ -3,7 +3,7 @@
 
 set -e
 
-echo “🔧 开始配置内核...”
+echo "🔧 开始配置内核..."
 
 cd WSL2-Linux-Kernel
 
@@ -26,4 +26,4 @@ cp Microsoft/config-wsl .config
 # 4. 生成最终配置
 make olddefconfig
 
-echo “✅ 内核配置完成！”
+echo "✅ 内核配置完成！"
