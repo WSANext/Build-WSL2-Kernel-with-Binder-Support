@@ -44,6 +44,10 @@ jobs:
         if: steps.cache-kernel.outputs.cache-hit != 'true'
         run: |
           echo "正在克隆内核源码（分支: ${{ env.KERNEL_BRANCH }}）..."
+          if [ -d "WSL2-Linux-Kernel" ]; then
+            echo “检测到旧目录，清理中...”
+            rm -rf WSL2-Linux-Kernel
+          fi
           git clone --depth 1 \
             --branch ${{ env.KERNEL_BRANCH }} \
             ${{ env.KERNEL_REPO }} \

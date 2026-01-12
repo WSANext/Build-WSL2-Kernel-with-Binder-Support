@@ -1,9 +1,9 @@
 #!/bin/bash
-# scripts/setup_config.sh - 自动配置内核 (修正强制版)
+# scripts/setup_config.sh 
 
 set -e
 
-echo "🔧 开始配置内核 (修正版)..."
+echo "🔧 开始配置内核 ..."
 
 cd WSL2-Linux-Kernel
 
@@ -20,15 +20,15 @@ cp Microsoft/config-wsl .config
 # 【最关键】强制启用 ASHMEM 为 y
 ./scripts/config --set-val ASHMEM y
 
-# 3. (保留)处理其他可选选项
+# 3. 处理其他可选选项
 ./scripts/config --enable DEBUG_INFO
-# ./scripts/config --enable KGDB
-# ./scripts/config --enable PROFILING
+./scripts/config --enable KGDB
+./scripts/config --enable PROFILING
 
 # 4. 生成最终配置(接受新选项的默认值)
 make olddefconfig
 
-# 5. 【新增：关键验证步骤】立即检查配置是否真正写入
+# 5. 检查配置是否真正写入
 echo "✅ 内核配置完成！正在验证关键驱动..."
 echo "----------------------------------------"
 if grep -q "CONFIG_ANDROID_BINDER_IPC=y" .config && \
