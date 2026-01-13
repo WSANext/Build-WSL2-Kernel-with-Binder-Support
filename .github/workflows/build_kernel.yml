@@ -84,12 +84,33 @@ jobs:
           ls -la scripts/ 2>/dev/null || echo “scripts 目录不存在！”
 
       # 7. 配置内核（运行我们的脚本）
-      - name: Configure kernel
+      - name: Configure kernel (诊断模式)
         run: |
           chmod +x scripts/setup_config.sh
-          ./scripts/setup_config.sh
-          echo "配置完成，确认关键选项:"
-          grep -E "ANDROID|ASHMEM" WSL2-Linux-Kernel/.config || true
+          cd WSL2-Linux-Kernel
+
+          echo "=== 1. 执行配置脚本前，先查看原始配置中ASHMEM的状态 ==="
+          grep -i "ASHMEM" .config || echo "初始状态: 未找到ASHMEM配置"
+
+          echo "=== 2. 执行我们的配置脚本 ==="
+          ../scripts/setup_config.sh
+
+          echo "=== 3. 脚本执行后，立即查看.config文件 ==="
+          cat .config | grep -i "ASHMEM" || echo "脚本执行后: 仍未找到ASHMEM配置"
+          echo "--- 同时检查ANDROID和SHMEM ---"
+          grep -E "^(CONFIG_ANDROID|CONFIG_SHMEM)=" .config || echo "未找到"
+
+          echo "=== 4. 执行 'make olddefconfig' 并观察变化 ==="
+          cp .config .config.before_olddefconfig
+          make olddefconfig
+          echo "--- 比较 olddefconfig 前后的差异 (重点关注ASHMEM) ---"
+          diff -u .config.before_olddefconfig .config | grep -i ashmem || echo "差异中未发现ASHMEM变化"
+
+          echo "=== 5. 最终 .config 文件状态 ==="
+          echo "ASHMEM相关:"
+          grep -i ashmem .config || echo "(无)"
+          echo "..."
+          echo "如果最终仍未启用，我们将采用备用方案直接修改。"
 
       # 8. 编译内核（运行我们的脚本）
       - name: Compile kernel
